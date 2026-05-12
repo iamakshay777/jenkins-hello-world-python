@@ -4,7 +4,7 @@ pipeline {
     // Edit these to match your AWS setup
     environment {
         AWS_REGION    = 'us-east-1'
-        AWS_ACCOUNT   = '123456789012'                                  // <-- replace with your AWS account ID
+        AWS_ACCOUNT   = '595028890058'                                  // <-- replace with your AWS account ID
         ECR_REPO      = 'hello-world-python'
         ECR_REGISTRY  = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         IMAGE_NAME    = "${ECR_REGISTRY}/${ECR_REPO}"
