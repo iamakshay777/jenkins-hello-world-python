@@ -8,7 +8,7 @@ app = Flask(__name__)
 @app.route("/")
 def hello():
     return {
-        "message": "Hello, World!",
+        "message": "Hello, akshay!",
         "host": socket.gethostname(),
         "version": os.environ.get("APP_VERSION", "dev"),
     }
