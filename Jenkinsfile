@@ -71,8 +71,11 @@ pipeline {
                 ]]) {
                     sh '''
                         set -eux
-                        sudo mkdir -p ${DEPLOY_DIR}
-                        sudo chown $(id -u):$(id -g) ${DEPLOY_DIR}
+                        # ${DEPLOY_DIR} must already exist and be owned by the jenkins user.
+                        # One-time host setup:
+                        #   sudo mkdir -p /opt/hello-world-python
+                        #   sudo chown jenkins:jenkins /opt/hello-world-python
+                        mkdir -p ${DEPLOY_DIR}
                         cp docker-compose.yml deploy.sh ${DEPLOY_DIR}/
                         cd ${DEPLOY_DIR}
                         chmod +x deploy.sh
