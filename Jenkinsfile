@@ -57,8 +57,10 @@ pipeline {
                         aws ecr get-login-password --region ${AWS_REGION} \
                             | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push ${IMAGE_NAME}:latest
+                        # --platform avoids Docker 25+ multi-arch-manifest push error
+                        # when the base image (python:3.12-slim) is multi-platform.
+                        docker push --platform linux/amd64 ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push --platform linux/amd64 ${IMAGE_NAME}:latest
                     '''
                 }
             }
