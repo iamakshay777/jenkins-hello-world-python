@@ -30,20 +30,7 @@ pipeline {
             }
         }
 
-        stage('Build image') {
-            steps {
-                sh '''
-                    set -eux
-                    docker build \
-                        --build-arg APP_VERSION=${IMAGE_TAG} \
-                        -t ${IMAGE_NAME}:${IMAGE_TAG} \
-                        -t ${IMAGE_NAME}:latest \
-                        .
-                '''
-            }
-        }
-
-        stage('Login to ECR & push') {
+        stage('Build & push to ECR (buildx)') {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -51,16 +38,26 @@ pipeline {
                 ]]) {
                     sh '''
                         set -eux
+                        # Ensure ECR repo exists
                         aws ecr describe-repositories --repository-names ${ECR_REPO} --region ${AWS_REGION} \
                             || aws ecr create-repository --repository-name ${ECR_REPO} --region ${AWS_REGION}
 
+                        # Login to ECR
                         aws ecr get-login-password --region ${AWS_REGION} \
                             | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
-                        # --platform avoids Docker 25+ multi-arch-manifest push error
-                        # when the base image (python:3.12-slim) is multi-platform.
-                        docker push --platform linux/amd64 ${IMAGE_NAME}:${IMAGE_TAG}
-                        docker push --platform linux/amd64 ${IMAGE_NAME}:latest
+                        # buildx: build + push single-platform image in one shot.
+                        # --provenance=false / --sbom=false strip the extra attestation
+                        # manifests that confuse plain `docker push` on Docker 25+.
+                        docker buildx build \
+                            --platform linux/amd64 \
+                            --provenance=false \
+                            --sbom=false \
+                            --build-arg APP_VERSION=${IMAGE_TAG} \
+                            -t ${IMAGE_NAME}:${IMAGE_TAG} \
+                            -t ${IMAGE_NAME}:latest \
+                            --push \
+                            .
                     '''
                 }
             }
